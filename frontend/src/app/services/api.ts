@@ -9,7 +9,7 @@
 
 const API_BASE_URL =
   (import.meta as unknown as { env: Record<string, string> }).env?.VITE_API_URL ||
-  "https://password-strength-checker-6-5j06.onrender.com/";
+  "https://password-strength-checker-6-5j06.onrender.com/analyze";
 
 export type StrengthLevel =
   | "very_weak"
