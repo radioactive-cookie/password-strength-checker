@@ -52,6 +52,7 @@ class PasswordResponse(BaseModel):
                 "strength": "Very Strong",
                 "entropy": 83.45,
                 "suggestions": [],
-                "estimated_crack_time": "centuries"
+                "estimated_crack_time": "centuries",
+                "breach_count": 0
             }
         }
