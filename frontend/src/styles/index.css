@@ -1,3 +1,49 @@
 @import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
+
+/* SecurePass Global Overrides */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #0a0a0a;
+  color: #ffffff;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #111;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 200, 255, 0.25);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 200, 255, 0.5);
+}
+
+/* Selection color */
+::selection {
+  background: rgba(0, 200, 255, 0.25);
+  color: #ffffff;
+}
+
+/* Keyframes */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 200, 255, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(0, 200, 255, 0.6); }
+}

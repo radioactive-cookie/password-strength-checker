@@ -60,8 +60,18 @@ async def startup_event():
     """
     Application startup event handler.
     """
+    print("\n" + "="*70)
     print("✓ Password Strength Checker API started successfully")
-    print(f"✓ Allowed Origins: {settings.CORS_ORIGINS}")
+    print("="*70)
+    print(f"📍 Server running at: http://127.0.0.1:8000")
+    print(f"📍 API Docs at: http://127.0.0.1:8000/docs")
+    print(f"✓ CORS Enabled for Origins:")
+    for origin in settings.CORS_ORIGINS:
+        print(f"   - {origin}")
+    print(f"✓ Available endpoints:")
+    print(f"   - POST /api/check-password (password strength analysis)")
+    print(f"   - GET /api/health (health check)")
+    print("="*70 + "\n")
 
 
 # Shutdown event
@@ -70,7 +80,7 @@ async def shutdown_event():
     """
     Application shutdown event handler.
     """
-    print("✓ Password Strength Checker API shutdown")
+    print("\n✓ Password Strength Checker API shutdown\n")
 
 
 if __name__ == "__main__":

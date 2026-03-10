@@ -1,72 +1,113 @@
-import { Shield, Github, BookOpen, Mail } from 'lucide-react';
+import { Shield, Github, Mail, Heart } from "lucide-react";
 
 export function Footer() {
-  const currentYear = new Date().getFullYear();
-
   return (
-    <footer className="bg-[#0a0a0a] border-t border-[#00c8ff]/20 py-12 px-4">
-      <div className="container mx-auto max-w-6xl">
-        <div className="grid md:grid-cols-4 gap-8 mb-8">
-          <div className="col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <Shield className="w-6 h-6 text-[#00c8ff]" />
-              <span className="text-xl font-bold bg-gradient-to-r from-[#00c8ff] to-white bg-clip-text text-transparent">
-                SecurePass
-              </span>
+    <footer
+      id="contact"
+      style={{
+        background: "#080808",
+        borderTop: "1px solid rgba(0,200,255,0.08)",
+      }}
+    >
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+          {/* Brand */}
+          <div className="flex items-center gap-2">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{
+                background: "rgba(0, 200, 255, 0.08)",
+                border: "1px solid rgba(0, 200, 255, 0.25)",
+              }}
+            >
+              <Shield size={16} style={{ color: "#00c8ff" }} />
             </div>
-            <p className="text-gray-400 mb-4 max-w-md">
-              Your privacy matters. All password checks happen locally in your browser. 
-              We never store or transmit your passwords.
-            </p>
+            <span
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                color: "#ffffff",
+                fontSize: "1rem",
+                fontWeight: 600,
+                letterSpacing: "0.04em",
+              }}
+            >
+              Secure<span style={{ color: "#00c8ff" }}>Pass</span>
+            </span>
           </div>
 
-          <div>
-            <h3 className="font-semibold text-white mb-4">Resources</h3>
-            <ul className="space-y-2">
-              <li>
-                <a href="#" className="text-gray-400 hover:text-[#00c8ff] transition-colors flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" />
-                  Documentation
-                </a>
-              </li>
-              <li>
-                <a href="#guide" className="text-gray-400 hover:text-[#00c8ff] transition-colors flex items-center gap-2">
-                  <Shield className="w-4 h-4" />
-                  Security Guide
-                </a>
-              </li>
-            </ul>
+          {/* Links */}
+          <div className="flex items-center gap-6">
+            <a
+              href="https://github.com/radioactive-cookie"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 transition-colors duration-200"
+              style={{ color: "#666", textDecoration: "none" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#00c8ff")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#666")}
+            >
+              <Github size={17} />
+              <span
+                style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: "0.8rem",
+                }}
+              >
+                GitHub
+              </span>
+            </a>
+
+            <a
+              href="mailto:pritammunshi2005@gmail.com"
+              className="flex items-center gap-2 transition-colors duration-200"
+              style={{ color: "#666", textDecoration: "none" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#00c8ff")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#666")}
+            >
+              <Mail size={17} />
+              <span
+                style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: "0.8rem",
+                }}
+              >
+                Contact
+              </span>
+            </a>
           </div>
 
-          <div>
-            <h3 className="font-semibold text-white mb-4">Connect</h3>
-            <ul className="space-y-2">
-              <li>
-                <a href="https://github.com/radioactive-cookie" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#00c8ff] transition-colors flex items-center gap-2">
-                  <Github className="w-4 h-4" />
-                  GitHub
-                </a>
-              </li>
-              <li>
-                <a href="mailto:pritammunshi2005@gmail.com" className="text-gray-400 hover:text-[#00c8ff] transition-colors duration-300 flex items-center gap-2">
-                  <Mail className="w-4 h-4" />
-                  Email
-                </a>
-              </li>
-            </ul>
+          {/* Copyright */}
+          <div className="flex items-center gap-1.5">
+            <span
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: "0.75rem",
+                color: "#444",
+              }}
+            >
+              © 2025 password_checker · Made with
+            </span>
+            <Heart size={12} style={{ color: "#ff6b6b" }} />
           </div>
         </div>
 
-        <div className="border-t border-[#00c8ff]/10 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-gray-500 text-sm">
-              © {currentYear} SecurePass. All rights reserved.
-            </p>
-            <div className="flex gap-6 text-sm text-gray-500">
-              <a href="#" className="hover:text-[#00c8ff] transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-[#00c8ff] transition-colors">Terms of Service</a>
-            </div>
-          </div>
+        {/* Divider + disclaimer */}
+        <div
+          className="mt-8 pt-6"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}
+        >
+          <p
+            style={{
+              fontFamily: "'Inter', sans-serif",
+              fontSize: "0.75rem",
+              color: "#333",
+              textAlign: "center",
+              lineHeight: 1.6,
+            }}
+          >
+            password_checker uses k-anonymity to check passwords against breach databases — your full password is never sent externally.
+            This tool is for educational purposes. Always use a trusted password manager for storing credentials.
+          </p>
         </div>
       </div>
     </footer>

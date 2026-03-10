@@ -1,14 +1,83 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "motion/react";
-import { Zap, AlertCircle, Check } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Eye, EyeOff, Copy, Check, Zap } from "lucide-react";
 import { checkPassword } from "../services/api";
 
 function PasswordChecker() {
   const [password, setPassword] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [copied, setCopied] = useState(false);
   const debounceTimer = useRef(null);
+
+  /**
+   * Password Generator Function
+   * Generates a secure random password with:
+   * - Minimum 16 characters
+   * - Uppercase letters (A-Z)
+   * - Lowercase letters (a-z)
+   * - Numbers (0-9)
+   * - Special characters (!@#$%^&*()_+-=[]{}<>?)
+   */
+  const generateStrongPassword = () => {
+    const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const lowercase = "abcdefghijklmnopqrstuvwxyz";
+    const numbers = "0123456789";
+    const specialChars = "!@#$%^&*()_+-=[]{}<>?";
+
+    // Combine all character pools
+    const allChars = uppercase + lowercase + numbers + specialChars;
+
+    // Build password ensuring at least one character from each category
+    let newPassword = "";
+    newPassword += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
+    newPassword += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
+    newPassword += numbers.charAt(Math.floor(Math.random() * numbers.length));
+    newPassword += specialChars.charAt(Math.floor(Math.random() * specialChars.length));
+
+    // Fill remaining characters randomly to reach 16 characters
+    for (let i = newPassword.length; i < 16; i++) {
+      newPassword += allChars.charAt(Math.floor(Math.random() * allChars.length));
+    }
+
+    // Shuffle the password to distribute special characters randomly
+    const shuffled = newPassword
+      .split("")
+      .sort(() => Math.random() - 0.5)
+      .join("");
+
+    // Update password state
+    setPassword(shuffled);
+  };
+
+  /**
+   * Manually check password - called when "Check Strength" button is clicked
+   * Bypasses the debounce timer for immediate feedback
+   */
+  const manualCheckPassword = async () => {
+    if (!password.trim()) {
+      setError("Please enter a password to check.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      console.log("[PasswordChecker] Manual check triggered via button...");
+      const data = await checkPassword(password);
+      setResult(data);
+      setError(null);
+    } catch (error) {
+      console.error("[PasswordChecker] Error during manual check:", error);
+      setError(error instanceof Error ? error.message : "Failed to check password. Please try again.");
+      setResult(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   /**
    * Debounced password check - waits 500ms after user stops typing
@@ -23,63 +92,35 @@ function PasswordChecker() {
     // Only check if password has content
     if (password.trim().length === 0) {
       setResult(null);
+      setError(null);
       return;
     }
 
     // Set timer for debounced check
     setLoading(true);
+    setError(null);
     debounceTimer.current = setTimeout(async () => {
       try {
+        console.log("[PasswordChecker] Checking password via API...");
         const data = await checkPassword(password);
         setResult(data);
+        setError(null);
       } catch (error) {
-        console.error("Error checking password:", error);
+        console.error("[PasswordChecker] Error checking password:", error);
+        setError(error instanceof Error ? error.message : "Failed to check password. Please try again.");
+        setResult(null);
       } finally {
         setLoading(false);
       }
     }, 500);
 
-    // Cleanup timer on component unmount
+    // Cleanup on unmount
     return () => {
       if (debounceTimer.current) {
         clearTimeout(debounceTimer.current);
       }
     };
   }, [password]);
-
-  /**
-   * Generate a secure random password
-   * Length: 16 characters
-   * Includes: uppercase, lowercase, numbers, special characters
-   */
-  const generateSecurePassword = () => {
-    const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const lowercase = "abcdefghijklmnopqrstuvwxyz";
-    const numbers = "0123456789";
-    const specialChars = "!@#$%^&*()_+-=[]{}|;:,.<>?";
-    
-    const allChars = uppercase + lowercase + numbers + specialChars;
-    let newPassword = "";
-
-    // Ensure at least one of each character type
-    newPassword += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
-    newPassword += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
-    newPassword += numbers.charAt(Math.floor(Math.random() * numbers.length));
-    newPassword += specialChars.charAt(Math.floor(Math.random() * specialChars.length));
-
-    // Fill remaining characters randomly
-    for (let i = newPassword.length; i < 16; i++) {
-      newPassword += allChars.charAt(Math.floor(Math.random() * allChars.length));
-    }
-
-    // Shuffle the password
-    const shuffled = newPassword
-      .split("")
-      .sort(() => Math.random() - 0.5)
-      .join("");
-
-    setPassword(shuffled);
-  };
 
   /**
    * Get color for strength bar based on score
@@ -109,26 +150,57 @@ function PasswordChecker() {
   };
 
   /**
-   * Get security warning for breached passwords
+   * Get security warning or safe status for breached passwords
    */
   const getBreachWarning = () => {
-    if (!result || result.breach_count === 0) return null;
+    if (!result) return null;
+    
+    if (result.breach_count > 0) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg flex items-start gap-2"
+        >
+          <span className="text-red-400 text-lg flex-shrink-0">⚠️</span>
+          <div>
+            <p className="text-red-400 text-sm font-semibold">Password Compromised</p>
+            <p className="text-red-300 text-xs">
+              This password has been found in {result.breach_count.toLocaleString()} known data breaches.
+              Please use a different password.
+            </p>
+          </div>
+        </motion.div>
+      );
+    }
+    
+    // Show safe status when no breaches found
     return (
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg flex items-start gap-2"
+        className="mt-4 p-3 bg-green-500/20 border border-green-500/50 rounded-lg flex items-start gap-2"
       >
-        <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+        <span className="text-green-400 text-lg flex-shrink-0">✓</span>
         <div>
-          <p className="text-red-400 text-sm font-semibold">⚠️ Password Compromised</p>
-          <p className="text-red-300 text-xs">
-            This password has been found in {result.breach_count.toLocaleString()} known data breaches.
-            Please use a different password.
+          <p className="text-green-400 text-sm font-semibold">Password Safe</p>
+          <p className="text-green-300 text-xs">
+            No breach records found for this password.
           </p>
         </div>
       </motion.div>
     );
+  };
+
+  /**
+   * Copy password to clipboard
+   */
+  const copyPasswordToClipboard = () => {
+    if (password) {
+      navigator.clipboard.writeText(password);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
@@ -194,11 +266,27 @@ function PasswordChecker() {
         {/* Breach Warning */}
         {getBreachWarning()}
 
+        {/* Error Message Display */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg flex items-start gap-2"
+          >
+            <span className="text-red-400 text-lg flex-shrink-0">✕</span>
+            <div>
+              <p className="text-red-400 text-sm font-semibold">API Error</p>
+              <p className="text-red-300 text-xs">{error}</p>
+            </div>
+          </motion.div>
+        )}
+
         {/* Results Section */}
         {result && !loading && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
             className="grid grid-cols-2 gap-4 pt-4 border-t border-[#00c8ff]/10"
           >
             <div className="p-4 bg-[#0a0a0a] rounded-lg border border-[#00c8ff]/10">
@@ -212,13 +300,13 @@ function PasswordChecker() {
 
             {/* Suggestions */}
             {result.suggestions && result.suggestions.length > 0 && (
-              <div className="col-span-2 p-4 bg-[#0a0a0a] rounded-lg border border-[#00c8ff]/10">
-                <p className="text-xs font-semibold text-gray-300 mb-2">SUGGESTIONS</p>
-                <ul className="space-y-1">
-                  {result.suggestions.map((suggestion, idx) => (
-                    <li key={idx} className="text-xs text-gray-400 flex items-start gap-2">
-                      <span className="text-[#00c8ff] mt-1">→</span>
-                      <span>{suggestion}</span>
+              <div className="col-span-2 p-4 bg-[#0a0a0a] rounded-lg border border-yellow-500/20">
+                <p className="text-xs text-gray-400 mb-3 font-semibold">SUGGESTIONS</p>
+                <ul className="space-y-2">
+                  {result.suggestions.map((suggestion, index) => (
+                    <li key={index} className="text-xs text-yellow-300 flex items-start gap-2">
+                      <span className="text-yellow-500 mt-0.5">›</span>
+                      {suggestion}
                     </li>
                   ))}
                 </ul>
@@ -230,23 +318,53 @@ function PasswordChecker() {
         {/* Loading State */}
         {loading && (
           <motion.div
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             className="text-center py-4"
           >
-            <p className="text-sm text-gray-400">Analyzing password...</p>
+            <p className="text-gray-400 text-sm">Analyzing password...</p>
           </motion.div>
         )}
 
         {/* Action Buttons */}
-        <div className="flex gap-3 pt-4 border-t border-[#00c8ff]/10">
+        <div className="space-y-3 pt-4 border-t border-[#00c8ff]/10">
+          {/* Check Strength Button */}
           <button
-            onClick={generateSecurePassword}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-[#00c8ff]/20 to-[#00c8ff]/10 border border-[#00c8ff]/40 rounded-lg text-[#00c8ff] font-semibold hover:border-[#00c8ff]/60 hover:from-[#00c8ff]/30 transition-all duration-300 flex items-center justify-center gap-2 group"
+            onClick={manualCheckPassword}
+            className="w-full bg-[#00c8ff] text-black font-semibold py-2 rounded-lg hover:scale-105 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!password || loading}
           >
-            <Zap className="w-4 h-4 group-hover:scale-110 transition-transform" />
-            Generate Secure Password
+            {loading ? "Analyzing..." : "Check Strength"}
           </button>
+
+          {/* Generate Strong Password Button */}
+          <button
+            onClick={generateStrongPassword}
+            className="mt-3 w-full bg-[#00c8ff] text-black font-semibold py-2 rounded-lg hover:scale-105 transition duration-200 flex items-center justify-center gap-2"
+          >
+            <Zap size={18} />
+            Generate Strong Password
+          </button>
+
+          {/* Copy Password Button */}
+          {password && (
+            <motion.button
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              onClick={copyPasswordToClipboard}
+              className="w-full bg-gray-700 text-white font-semibold py-2 rounded-lg hover:scale-105 transition duration-200 flex items-center justify-center gap-2"
+            >
+              {copied ? (
+                <>
+                  <Check size={18} /> Copied!
+                </>
+              ) : (
+                <>
+                  <Copy size={18} /> Copy Password
+                </>
+              )}
+            </motion.button>
+          )}
         </div>
       </div>
     </motion.div>

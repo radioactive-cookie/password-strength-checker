@@ -1,19 +1,30 @@
-import { Navbar } from './components/Navbar';
-import { HeroSection } from './components/HeroSection';
-import { HowItWorks } from './components/HowItWorks';
-import { GuideSection } from './components/GuideSection';
-import { FeatureCards } from './components/FeatureCards';
-import { Footer } from './components/Footer';
+import { Navbar } from "./components/Navbar";
+import { HeroSection } from "./components/HeroSection";
+import { FeaturesSection } from "./components/FeaturesSection";
+import { HowItWorks } from "./components/HowItWorks";
+import { SecurityGuide } from "./components/SecurityGuide";
+import { TechStack } from "./components/TechStack";
+import { UpdatesSection } from "./components/UpdatesSection";
+import { Footer } from "./components/Footer";
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div
+      style={{
+        background: "#0a0a0a",
+        minHeight: "100vh",
+        fontFamily: "'Inter', sans-serif",
+        overflowX: "hidden",
+      }}
+    >
       <Navbar />
       <main>
         <HeroSection />
+        <FeaturesSection />
         <HowItWorks />
-        <GuideSection />
-        <FeatureCards />
+        <SecurityGuide />
+        <TechStack />
+        <UpdatesSection />
       </main>
       <Footer />
     </div>
