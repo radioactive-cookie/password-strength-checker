@@ -17,7 +17,18 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json"
 )
+origins = [
+    "http://localhost:5173",  # local frontend
+    "https://password-strength-checker-three-pi.vercel.app",  # your Vercel frontend
+]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,   # or ["*"] for testing
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Add CORS middleware to allow cross-origin requests from frontend
 app.add_middleware(
