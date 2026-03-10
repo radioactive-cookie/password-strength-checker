@@ -9,22 +9,16 @@ from app.routes import password_routes
 
 
 # Create FastAPI application instance
-app = FastAPI(
-    title=settings.API_TITLE,
-    version=settings.API_VERSION,
-    description=settings.API_DESCRIPTION,
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/openapi.json"
-)
+app = FastAPI()
+
 origins = [
-    "http://localhost:5173",  # local frontend
-    "https://password-strength-checker-three-pi.vercel.app",  # your Vercel frontend
+    "https://password-strength-checker-three-pi.vercel.app",
+    "http://localhost:5173",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,   # or ["*"] for testing
+    allow_origins=origins,  # allow your frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
