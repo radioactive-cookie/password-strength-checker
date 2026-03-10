@@ -16,9 +16,14 @@ origins = [
     "http://localhost:5173",
 ]
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+# Allow all origins (safe for testing)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # allow your frontend
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
