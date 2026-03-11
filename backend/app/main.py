@@ -13,9 +13,10 @@ app = FastAPI()
 
 # Allow requests from frontend and local development
 origins = [
-    "https://password-strength-checker-three-pi.vercel.app",
-    "https://password-strength-checker-n1gaofce7.vercel.app",
     "http://localhost:5173",
+    "https://password-strength-checker-three-pi.vercel.app",
+    "https://password-strength-checker-87hzp3twq.vercel.app",
+    "https://password-strength-check-git-634659-radioactive-cookies-projects.vercel.app",
 ]
 
 # Add CORS middleware BEFORE including routers
