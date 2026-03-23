@@ -57,7 +57,6 @@ async def startup_event():
     print("\n" + "="*70)
     print("✓ Password Strength Checker API started successfully")
     print("="*70)
-<<<<<<< HEAD
     print(f"📍 Server running at: http://127.0.0.1:8000")
     print(f"📍 API Docs at: http://127.0.0.1:8000/docs")
     print(f"✓ CORS Enabled for Origins:")
@@ -68,11 +67,6 @@ async def startup_event():
     print(f"   - POST /auth/login (user authentication)")
     print(f"   - POST /api/check-password (password strength analysis)")
     print(f"   - GET /api/health (health check)")
-=======
-    print("✓ Available endpoints:")
-    print("   - POST /api/check-password")
-    print("   - GET /api/health")
->>>>>>> 7f3ee5c2d3e3c74244e064457e1f52f97a270801
     print("="*70 + "\n")
 
 
