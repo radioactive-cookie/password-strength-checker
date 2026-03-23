@@ -5,7 +5,7 @@ Main FastAPI application for Password Strength Checker API.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.routes import password_routes
+from app.routes import password_routes, auth
 
 
 # Create FastAPI application instance
@@ -29,8 +29,9 @@ app.add_middleware(
 )
 
 
-# Include password routes
+# Include routers
 app.include_router(password_routes.router)
+app.include_router(auth.router)
 
 
 # Root endpoint
@@ -48,6 +49,8 @@ async def root():
         "endpoints": {
             "docs": "/docs",
             "redoc": "/redoc",
+            "auth_register": "/auth/register",
+            "auth_login": "/auth/login",
             "check_password": "/api/check-password",
             "health": "/api/health"
         }
@@ -69,6 +72,8 @@ async def startup_event():
     for origin in settings.CORS_ORIGINS:
         print(f"   - {origin}")
     print(f"✓ Available endpoints:")
+    print(f"   - POST /auth/register (secure user registration)")
+    print(f"   - POST /auth/login (user authentication)")
     print(f"   - POST /api/check-password (password strength analysis)")
     print(f"   - GET /api/health (health check)")
     print("="*70 + "\n")

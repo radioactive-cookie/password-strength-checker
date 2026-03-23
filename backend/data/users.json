@@ -1,0 +1,18 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "testuser123",
+      "hashed_password": "$2b$12$2.9aFkQ4vUMosI.w/wxI5.HInYWYSp8wQ0kRAcr5pS0X7Hf7jOpTS",
+      "email": "test@example.com",
+      "created_at": "2026-03-23T09:30:17.988659"
+    },
+    {
+      "id": 2,
+      "username": "admin",
+      "hashed_password": "$2b$12$g.othAUqA/5JbihVf76aUOkEEoxOtrwxzn/7PLmDxASRLq5tpYm.W",
+      "email": "admin@gmail.com",
+      "created_at": "2026-03-23T09:59:24.226542"
+    }
+  ]
+}

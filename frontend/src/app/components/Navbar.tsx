@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
-import { Shield, Menu, X } from "lucide-react";
+import { Shield, Menu, X, LogOut, UserPlus, LogIn, User } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { useNavigate } from "react-router";
+import { useAuth } from "../context/AuthContext";
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -11,6 +13,8 @@ const navLinks = [
 ];
 
 export function Navbar() {
+  const navigate = useNavigate();
+  const { isLoggedIn, user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -24,6 +28,17 @@ export function Navbar() {
     setMenuOpen(false);
     const el = document.querySelector(href);
     if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+    setMenuOpen(false);
+  };
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    setMenuOpen(false);
   };
 
   return (
@@ -41,7 +56,10 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <button
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+              navigate("/");
+            }}
             className="flex items-center gap-2 group"
           >
             <div
@@ -100,6 +118,87 @@ export function Navbar() {
             ))}
           </nav>
 
+          {/* Auth buttons */}
+          <div className="hidden md:flex items-center gap-3">
+            {isLoggedIn && user ? (
+              <>
+                <button
+                  onClick={() => handleNavigate("/dashboard")}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all"
+                  style={{
+                    color: "#00c8ff",
+                    background: "rgba(0, 200, 255, 0.05)",
+                    border: "1px solid rgba(0, 200, 255, 0.3)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(0, 200, 255, 0.15)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(0, 200, 255, 0.05)";
+                  }}
+                >
+                  <User size={16} />
+                  <span className="hidden sm:inline">{user.username}</span>
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all"
+                  style={{
+                    color: "#ff6b6b",
+                    background: "rgba(255, 107, 107, 0.05)",
+                    border: "1px solid rgba(255, 107, 107, 0.3)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(255, 107, 107, 0.15)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(255, 107, 107, 0.05)";
+                  }}
+                >
+                  <LogOut size={16} />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => handleNavigate("/login")}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all"
+                  style={{
+                    color: "#00c8ff",
+                    background: "rgba(0, 200, 255, 0.05)",
+                    border: "1px solid rgba(0, 200, 255, 0.3)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(0, 200, 255, 0.15)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(0, 200, 255, 0.05)";
+                  }}
+                >
+                  <LogIn size={16} />
+                  Login
+                </button>
+                <button
+                  onClick={() => handleNavigate("/register")}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all text-black"
+                  style={{
+                    background: "#00c8ff",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "#00a8dd";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "#00c8ff";
+                  }}
+                >
+                  <UserPlus size={16} />
+                  Register
+                </button>
+              </>
+            )}
+          </div>
+
           {/* Mobile menu button */}
           <button
             className="md:hidden p-2 rounded-lg"
@@ -154,6 +253,61 @@ export function Navbar() {
                   {link.label}
                 </button>
               ))}
+
+              {/* Mobile auth buttons */}
+              <div className="border-t border-[#00c8ff]/20 mt-4 pt-4 space-y-2">
+                {isLoggedIn && user ? (
+                  <>
+                    <button
+                      onClick={() => handleNavigate("/dashboard")}
+                      className="w-full text-left py-2 px-3 rounded-lg text-sm flex items-center gap-2 transition-all"
+                      style={{
+                        color: "#00c8ff",
+                        background: "rgba(0, 200, 255, 0.05)",
+                      }}
+                    >
+                      <User size={16} />
+                      {user.username}
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left py-2 px-3 rounded-lg text-sm flex items-center gap-2 transition-all"
+                      style={{
+                        color: "#ff6b6b",
+                        background: "rgba(255, 107, 107, 0.05)",
+                      }}
+                    >
+                      <LogOut size={16} />
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => handleNavigate("/login")}
+                      className="w-full py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-all"
+                      style={{
+                        color: "#00c8ff",
+                        background: "rgba(0, 200, 255, 0.05)",
+                        border: "1px solid rgba(0, 200, 255, 0.3)",
+                      }}
+                    >
+                      <LogIn size={16} />
+                      Login
+                    </button>
+                    <button
+                      onClick={() => handleNavigate("/register")}
+                      className="w-full py-2 px-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all text-black"
+                      style={{
+                        background: "#00c8ff",
+                      }}
+                    >
+                      <UserPlus size={16} />
+                      Register
+                    </button>
+                  </>
+                )}
+              </div>
             </nav>
           </motion.div>
         )}

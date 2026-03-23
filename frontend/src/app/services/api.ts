@@ -120,3 +120,59 @@ export function clientSideStrength(password: string): {
 
   return { strength, score };
 }
+
+// ───────────────────────────────────────────────
+// AUTHENTICATION ENDPOINTS
+// ───────────────────────────────────────────────
+
+export interface RegisterResponse {
+  id: number;
+  username: string;
+  email?: string;
+  created_at?: string;
+}
+
+export interface LoginResponse {
+  success: boolean;
+  message: string;
+  user: {
+    id: number;
+    username: string;
+    email?: string;
+  };
+}
+
+/**
+ * Register a new user with the backend
+ * @param username - Username (3-50 characters, alphanumeric + hyphens/underscores)
+ * @param password - Password (minimum 8 characters)
+ * @param email - Optional email address
+ * @returns Promise with user data
+ */
+export const registerUser = (
+  username: string,
+  password: string,
+  email?: string
+): Promise<RegisterResponse> => {
+  return post<RegisterResponse>("/auth/register", {
+    username,
+    password,
+    email,
+  });
+};
+
+/**
+ * Login a user with the backend
+ * @param username - Username
+ * @param password - Password
+ * @returns Promise with login response
+ */
+export const loginUser = (
+  username: string,
+  password: string
+): Promise<LoginResponse> => {
+  return post<LoginResponse>("/auth/login", {
+    username,
+    password,
+  });
+};
