@@ -8,8 +8,8 @@
  */
 
 const API_BASE_URL =
-  (import.meta as unknown as { env: Record<string, string> }).env?.VITE_API_URL ||
-  "http://localhost:8000";
+  import.meta.env.VITE_API_URL ||
+  "https://password-strength-checker-pivg.onrender.com";
 
 export type StrengthLevel =
   | "very_weak"
@@ -32,26 +32,31 @@ async function post<T>(path: string, body: object): Promise<T> {
   try {
     const fullUrl = `${API_BASE_URL}${path}`;
     console.log(`[API] POST request to: ${fullUrl}`);
-    
+
     const res = await fetch(fullUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    
+
     if (!res.ok) {
       const text = await res.text();
       console.error(`[API] Response error (${res.status}):`, text);
       throw new Error(`Request to ${path} failed (${res.status}): ${text}`);
     }
-    
-    const data = await res.json() as T;
+
+    const data = (await res.json()) as T;
     console.log(`[API] Response success:`, data);
     return data;
   } catch (error) {
     if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
-      console.error("[API] Network error - Backend may not be running at", API_BASE_URL);
-      throw new Error(`Unable to connect to the password analysis server at ${API_BASE_URL}. Please ensure the backend is running.`);
+      console.error(
+        "[API] Network error - Backend may not be running at",
+        API_BASE_URL
+      );
+      throw new Error(
+        `Unable to connect to the password analysis server at ${API_BASE_URL}. Please ensure the backend is running.`
+      );
     }
     throw error;
   }
@@ -67,7 +72,7 @@ async function get<T>(path: string): Promise<T> {
 }
 
 export const api = {
-  // No longer needed - checkPassword includes all data
+  // reserved for future endpoints
 };
 
 /**
@@ -77,11 +82,13 @@ export const api = {
  * - Shannon entropy calculation
  * - Estimated crack time
  * - Have I Been Pwned breach detection
- * 
+ *
  * @param password - The password to check
  * @returns Promise with strength analysis and breach status
  */
-export const checkPassword = (password: string): Promise<PasswordCheckResult> => {
+export const checkPassword = (
+  password: string
+): Promise<PasswordCheckResult> => {
   return post<PasswordCheckResult>("/api/check-password", { password });
 };
 

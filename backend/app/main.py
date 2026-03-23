@@ -9,23 +9,23 @@ from app.routes import password_routes, auth
 
 
 # Create FastAPI application instance
-app = FastAPI(
-    title=settings.API_TITLE,
-    version=settings.API_VERSION,
-    description=settings.API_DESCRIPTION,
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/openapi.json"
-)
+app = FastAPI()
 
+# Allow requests from frontend and local development
+origins = [
+    "http://localhost:5173",
+    "https://password-strength-checker-three-pi.vercel.app",
+    "https://password-strength-checker-87hzp3twq.vercel.app",
+    "https://password-strength-check-git-634659-radioactive-cookies-projects.vercel.app",
+]
 
-# Add CORS middleware to allow cross-origin requests from frontend
+# Add CORS middleware BEFORE including routers
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
-    allow_methods=settings.CORS_ALLOW_METHODS,
-    allow_headers=settings.CORS_ALLOW_HEADERS,
+    allow_origins=origins,  # or ["*"] for testing
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -37,12 +37,6 @@ app.include_router(auth.router)
 # Root endpoint
 @app.get("/")
 async def root():
-    """
-    Root endpoint providing API information.
-    
-    Returns:
-        Dict: API metadata and available endpoints.
-    """
     return {
         "message": "Welcome to Password Strength Checker API",
         "version": settings.API_VERSION,
@@ -60,12 +54,10 @@ async def root():
 # Startup event
 @app.on_event("startup")
 async def startup_event():
-    """
-    Application startup event handler.
-    """
     print("\n" + "="*70)
     print("✓ Password Strength Checker API started successfully")
     print("="*70)
+<<<<<<< HEAD
     print(f"📍 Server running at: http://127.0.0.1:8000")
     print(f"📍 API Docs at: http://127.0.0.1:8000/docs")
     print(f"✓ CORS Enabled for Origins:")
@@ -76,21 +68,23 @@ async def startup_event():
     print(f"   - POST /auth/login (user authentication)")
     print(f"   - POST /api/check-password (password strength analysis)")
     print(f"   - GET /api/health (health check)")
+=======
+    print("✓ Available endpoints:")
+    print("   - POST /api/check-password")
+    print("   - GET /api/health")
+>>>>>>> 7f3ee5c2d3e3c74244e064457e1f52f97a270801
     print("="*70 + "\n")
 
 
 # Shutdown event
 @app.on_event("shutdown")
 async def shutdown_event():
-    """
-    Application shutdown event handler.
-    """
     print("\n✓ Password Strength Checker API shutdown\n")
 
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",

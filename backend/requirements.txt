@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 pydantic==2.5.0
@@ -9,3 +10,11 @@ zxcvbn==4.4.28
 python-dotenv==1.0.0
 requests==2.31.0
 sqlalchemy==2.0.23
+=======
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+zxcvbn
+requests 
+>>>>>>> 7f3ee5c2d3e3c74244e064457e1f52f97a270801

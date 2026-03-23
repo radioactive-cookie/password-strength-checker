@@ -7,7 +7,11 @@
     "build": "vite build",
     "dev": "vite"
   },
+<<<<<<< HEAD
   "homepage": "./",
+=======
+  "homepage":"./",
+>>>>>>> 7f3ee5c2d3e3c74244e064457e1f52f97a270801
   "dependencies": {
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
