@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Shield, Menu, X, LogOut, UserPlus, LogIn, User } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { useAuth } from "../context/AuthContext";
 
 const navLinks = [
@@ -14,6 +14,7 @@ const navLinks = [
 
 export function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isLoggedIn, user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -26,8 +27,20 @@ export function Navbar() {
 
   const handleNavClick = (href: string) => {
     setMenuOpen(false);
-    const el = document.querySelector(href);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    
+    // If not on home page, navigate to home first
+    if (location.pathname !== "/") {
+      navigate("/");
+      // Use setTimeout to allow navigation to complete before scrolling
+      setTimeout(() => {
+        const el = document.querySelector(href);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } else {
+      // Already on home page, scroll directly
+      const el = document.querySelector(href);
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   const handleLogout = () => {
@@ -122,6 +135,25 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {isLoggedIn && user ? (
               <>
+                <button
+                  onClick={() => handleNavigate("/dashboard")}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                  style={{
+                    color: "#00c8ff",
+                    background: "rgba(0, 200, 255, 0.1)",
+                    border: "1px solid rgba(0, 200, 255, 0.4)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(0, 200, 255, 0.2)";
+                    e.currentTarget.style.boxShadow = "0 0 15px rgba(0, 200, 255, 0.3)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(0, 200, 255, 0.1)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                >
+                  📊 Dashboard
+                </button>
                 <button
                   onClick={() => handleNavigate("/dashboard")}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all"
@@ -258,6 +290,17 @@ export function Navbar() {
               <div className="border-t border-[#00c8ff]/20 mt-4 pt-4 space-y-2">
                 {isLoggedIn && user ? (
                   <>
+                    <button
+                      onClick={() => handleNavigate("/dashboard")}
+                      className="w-full text-left py-2 px-3 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all"
+                      style={{
+                        color: "#00c8ff",
+                        background: "rgba(0, 200, 255, 0.1)",
+                        border: "1px solid rgba(0, 200, 255, 0.4)",
+                      }}
+                    >
+                      📊 Dashboard
+                    </button>
                     <button
                       onClick={() => handleNavigate("/dashboard")}
                       className="w-full text-left py-2 px-3 rounded-lg text-sm flex items-center gap-2 transition-all"

@@ -1,6 +1,7 @@
 """
 Authentication routes for secure user registration and login.
 Implements secure password hashing with bcrypt.
+Uses Supabase for persistent user storage.
 """
 
 from fastapi import APIRouter, HTTPException, status
@@ -16,20 +17,29 @@ async def register_user(user_data: UserCreate):
     """
     Register a new user with secure password hashing.
     
+    Passwords are hashed with bcrypt and stored securely in Supabase.
+    Each user must have a unique username.
+    
     Args:
         user_data: UserCreate schema containing username and password
         
     Returns:
-        UserResponse: The created user (without password)
+        UserResponse: The created user (without hashed password)
         
     Raises:
-        HTTPException: If username already exists or validation fails
+        HTTPException 400: If username already exists
+        HTTPException 500: If database operation fails
+        
+    Security:
+        - Passwords are hashed with bcrypt (never stored plaintext)
+        - Usernames are unique in database
+        - No sensitive data returned in response
     """
     try:
         # Hash the password using bcrypt
         hashed_password = hash_password(user_data.password)
         
-        # Create user with hashed password
+        # Create user with hashed password in Supabase
         user = user_store.create_user(
             username=user_data.username,
             hashed_password=hashed_password,
@@ -51,9 +61,11 @@ async def register_user(user_data: UserCreate):
             detail=str(e)
         )
     except Exception as e:
+        # Database error or other unexpected error
+        print(f"Registration error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred during registration"
+            detail="An error occurred during registration. Please try again."
         )
 
 
@@ -62,22 +74,25 @@ async def login_user(credentials: UserLogin):
     """
     Authenticate a user and verify their password.
     
+    Retrieves user from Supabase and validates password with bcrypt.
+    
     Args:
         credentials: UserLogin schema containing username and password
         
     Returns:
-        dict: Login status and user info
+        dict: Login status and user info (excluding hashed password)
         
     Raises:
-        HTTPException: If username not found or password is incorrect
+        HTTPException 401: If username not found or password is incorrect
+        HTTPException 500: If database operation fails
         
     Security:
-        - Uses timing-attack resistant password comparison
-        - Never reveals whether username or password is wrong (both return same error)
-        - Hashed passwords are verified using bcrypt
+        - Uses timing-attack resistant password comparison (bcrypt)
+        - Generic error message for both user not found and invalid password
+        - Never reveals database details or hashed passwords
     """
     try:
-        # Get user from storage
+        # Get user from Supabase
         user = user_store.get_user_by_username(credentials.username)
         
         if user is None:
@@ -112,11 +127,14 @@ async def login_user(credentials: UserLogin):
         }
     
     except HTTPException:
+        # Re-raise HTTP exceptions
         raise
     except Exception as e:
+        # Database error or other unexpected error
+        print(f"Login error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred during login"
+            detail="An error occurred during login. Please try again."
         )
 
 

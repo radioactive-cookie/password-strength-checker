@@ -59,6 +59,19 @@ This makes it easy to understand the security level at a glance.
 
 ---
 
+# 📚 Documentation Guide
+
+**Getting Started?** Start here based on your needs:
+
+| Document | Purpose |
+|----------|---------|
+| [SETUP.md](SETUP.md) | **Start here!** Complete setup, configuration, and troubleshooting guide |
+| [SYSTEM_ARCHITECTURE.md](SYSTEM_ARCHITECTURE.md) | Understand the application architecture and data flow |
+| [SECURE_PASSWORD_STORAGE.md](SECURE_PASSWORD_STORAGE.md) | Learn about security practices and how passwords are handled |
+| [ATTRIBUTIONS.md](ATTRIBUTIONS.md) | Credits and acknowledgments |
+
+---
+
 # 🧠 How It Works
 
 1. The user enters or generates a password.
@@ -116,95 +129,61 @@ password_checker
 
 # ⚙️ Installation & Setup
 
-## 1. Clone the Repository
+> **👉 For complete setup instructions, see [SETUP.md](SETUP.md)**
 
-```bash
-git clone https://github.com/YOUR_USERNAME/password_checker.git
-cd password_checker
-```
+## Quick Start
 
----
+1. **Install dependencies**
+   ```bash
+   # Backend (Python 3.10+)
+   cd backend && pip install -r requirements.txt
+   
+   # Frontend (Node.js 16+)
+   cd ../frontend && npm install
+   ```
 
-# ▶ Running the Backend
+2. **Configure Supabase**
+   - Create `.env` file in `backend/` directory
+   - Add Supabase URL and Service Role Key
+   - See [SETUP.md](SETUP.md) for detailed instructions
 
-Navigate to the backend folder:
+3. **Run the Application**
+   
+   **Backend** (Terminal 1):
+   ```bash
+   cd backend
+   python -m uvicorn app.main:app --reload
+   ```
+   - Backend at: http://localhost:8000
+   - API docs at: http://localhost:8000/docs
 
-```bash
-cd backend
-```
+   **Frontend** (Terminal 2):
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+   - Frontend at: http://localhost:5173
 
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Start the FastAPI server:
-
-```bash
-uvicorn app.main:app --reload
-```
-
-The backend will run at:
-
-```
-http://127.0.0.1:8000
-```
-
-API documentation:
-
-```
-http://127.0.0.1:8000/docs
-```
+4. **Access the Application**
+   
+   Open http://localhost:5173 in your browser
 
 ---
 
-# ▶ Running the Frontend
+# 🔗 API Endpoints
 
-Open another terminal and navigate to the frontend folder:
-
-```bash
-cd frontend
+### Check Password Strength
 ```
+POST /api/check-password
+Content-Type: application/json
 
-Install dependencies:
-
-```bash
-npm install
-```
-
-Start the development server:
-
-```bash
-npm run dev
-```
-
-The frontend will run at:
-
-```
-http://localhost:5173
-```
-
----
-
-# 🔗 API Endpoint
-
-The frontend communicates with the backend using the following endpoint:
-
-```
-POST /check-password
-```
-
-Example request:
-
-```json
 {
-  "password": "examplePassword"
+  "password": "examplePassword",
+  "username": "optional_username"
 }
 ```
 
-Example response:
-
+**Response:**
 ```json
 {
   "score": 3,
@@ -216,17 +195,54 @@ Example response:
 }
 ```
 
+### Get Password History
+```
+GET /api/history?username=your_username
+```
+
+### Health Check
+```
+GET /api/health
+```
+
+For full API documentation when running, visit: http://localhost:8000/docs
+
 ---
 
-# 📌 Future Improvements
+# 🐛 Troubleshooting
 
-Some ideas for expanding the project in the future:
+Common issues and solutions can be found in [SETUP.md - Troubleshooting](SETUP.md#troubleshooting) section.
 
+Key issues:
+- **"Invalid API Key" Error**: Make sure you're using the **Service Role Key**, not the Anon key
+- **Password History Not Saving**: Verify the `password_logs` table exists in Supabase
+- **Dashboard Shows Black Screen**: Try a hard refresh (Ctrl+Shift+R)
+
+---
+
+# 📌 Implemented Features
+
+✅ **User Authentication** - Register and login system
+✅ **Dashboard** - View password history and analysis dashboard
+✅ **Password History** - Track all password analyses over time
+✅ **Secure Storage** - Supabase-powered database with Row-Level Security
+✅ **Dark Theme UI** - Modern, accessible user interface
+✅ **Responsive Design** - Works on desktop and mobile devices
+
+---
+
+# 🚀 Future Improvements
+
+Potential enhancements for the project:
+
+* Browser extension for real-time password analysis
 * Password manager integration
-* Password history checks
-* User accounts and saved reports
-* Browser extension
-* Cloud deployment
+* Advanced security reports and analytics
+* Team/organizational password policies
+* Password strength enforcement rules
+* Scheduled security audits
+* Biometric authentication options
+* Cloud deployment (AWS, Vercel, Heroku)
 
 ---
 

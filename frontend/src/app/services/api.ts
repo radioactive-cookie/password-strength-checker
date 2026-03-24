@@ -84,12 +84,41 @@ export const api = {
  * - Have I Been Pwned breach detection
  *
  * @param password - The password to check
+ * @param username - Optional username to store analysis in history for logged-in users
  * @returns Promise with strength analysis and breach status
  */
 export const checkPassword = (
-  password: string
+  password: string,
+  username?: string
 ): Promise<PasswordCheckResult> => {
-  return post<PasswordCheckResult>("/api/check-password", { password });
+  const body: { password: string; username?: string } = { password };
+  if (username) {
+    body.username = username;
+  }
+  return post<PasswordCheckResult>("/api/check-password", body);
+};
+
+/**
+ * Fetch password analysis history for a specific user
+ * @param username - Username to fetch history for
+ * @returns Promise with array of password analysis records
+ */
+export interface PasswordHistoryItem {
+  id: string;
+  username: string;
+  strength: number;
+  entropy: number;
+  crack_time: string;
+  created_at: string;
+}
+
+export const getPasswordHistory = async (
+  username: string
+): Promise<PasswordHistoryItem[]> => {
+  const response = await get<{ username: string; history: PasswordHistoryItem[] }>(
+    `/api/history?username=${encodeURIComponent(username)}`
+  );
+  return response.history || [];
 };
 
 // ───────────────────────────────────────────────

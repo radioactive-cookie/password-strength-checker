@@ -1,14 +1,11 @@
 """
-User model for secure authentication.
-Stores user credentials with hashed passwords.
+User model for secure authentication using Supabase.
+Stores encrypted user credentials with bcrypt hashing.
 """
 
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
 from typing import Optional
-import json
-import os
-from pathlib import Path
 
 
 # Pydantic models for API validation
@@ -59,101 +56,152 @@ class UserInDB(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
 
 
-# Simple file-based storage (for development; use SQLite for production)
+# Supabase-based user storage (uses Supabase for persistent data)
 class UserStore:
     """
-    Simple JSON-based user storage.
-    For production use SQLAlchemy with SQLite or PostgreSQL.
+    User storage using Supabase as the backend.
+    
+    Replaces JSON-based file storage with remote PostgreSQL database.
+    Provides a consistent API for user management operations.
+    
+    Required environment variables:
+        SUPABASE_URL: Supabase project URL
+        SUPABASE_KEY: Supabase API key
     """
     
-    def __init__(self, db_path: str = None):
-        if db_path is None:
-            db_path = os.path.join(
-                os.path.dirname(__file__),
-                "../../data/users.json"
+    def __init__(self):
+        """Initialize Supabase client."""
+        try:
+            from app.db.supabase_client import supabase
+            self.supabase = supabase
+            self.table_name = "users"
+        except Exception as e:
+            raise RuntimeError(
+                f"Failed to initialize Supabase client: {str(e)}. "
+                "Ensure SUPABASE_URL and SUPABASE_KEY environment variables are set."
             )
-        
-        self.db_path = db_path
-        self._ensure_db_exists()
-    
-    def _ensure_db_exists(self):
-        """Create the database file if it doesn't exist."""
-        directory = os.path.dirname(self.db_path)
-        if directory and not os.path.exists(directory):
-            os.makedirs(directory, exist_ok=True)
-        
-        if not os.path.exists(self.db_path):
-            with open(self.db_path, 'w') as f:
-                json.dump({"users": []}, f)
-    
-    def _load_users(self) -> list:
-        """Load users from JSON file."""
-        try:
-            with open(self.db_path, 'r') as f:
-                data = json.load(f)
-                return data.get("users", [])
-        except Exception as e:
-            print(f"Error loading users: {e}")
-            return []
-    
-    def _save_users(self, users: list):
-        """Save users to JSON file."""
-        try:
-            with open(self.db_path, 'w') as f:
-                json.dump({"users": users}, f, indent=2, default=str)
-        except Exception as e:
-            print(f"Error saving users: {e}")
     
     def get_user_by_username(self, username: str) -> Optional[dict]:
-        """Get user by username."""
-        users = self._load_users()
-        for user in users:
-            if user.get("username") == username:
-                return user
-        return None
+        """
+        Get user by username from Supabase.
+        
+        Args:
+            username: The username to search for
+            
+        Returns:
+            User dictionary if found, None otherwise
+            
+        Raises:
+            Exception: If database query fails
+        """
+        try:
+            response = self.supabase.table(self.table_name).select("*").eq(
+                "username", username
+            ).execute()
+            
+            if response.data and len(response.data) > 0:
+                return response.data[0]
+            return None
+        except Exception as e:
+            print(f"Error fetching user by username: {e}")
+            raise
     
     def create_user(self, username: str, hashed_password: str, email: Optional[str] = None) -> dict:
-        """Create a new user with hashed password."""
-        users = self._load_users()
+        """
+        Create a new user in Supabase.
         
-        # Check if user already exists
-        if any(u.get("username") == username for u in users):
-            raise ValueError(f"User '{username}' already exists")
-        
-        # Create new user
-        user_id = max([u.get("id", 0) for u in users], default=0) + 1
-        new_user = {
-            "id": user_id,
-            "username": username,
-            "hashed_password": hashed_password,
-            "email": email,
-            "created_at": datetime.now().isoformat()
-        }
-        
-        users.append(new_user)
-        self._save_users(users)
-        
-        return new_user
+        Args:
+            username: Unique username
+            hashed_password: Bcrypt hashed password (never store plaintext)
+            email: Optional email address
+            
+        Returns:
+            The created user record
+            
+        Raises:
+            ValueError: If username already exists
+            Exception: If database operation fails
+        """
+        try:
+            # Check if user already exists
+            existing_user = self.get_user_by_username(username)
+            if existing_user:
+                raise ValueError(f"User '{username}' already exists")
+            
+            # Insert new user into Supabase
+            response = self.supabase.table(self.table_name).insert({
+                "username": username,
+                "hashed_password": hashed_password,
+                "email": email,
+                "created_at": datetime.now().isoformat()
+            }).execute()
+            
+            if response.data and len(response.data) > 0:
+                return response.data[0]
+            else:
+                raise Exception("Failed to create user in database")
+        except ValueError:
+            # Re-raise ValueError for duplicate username
+            raise
+        except Exception as e:
+            print(f"Error creating user: {e}")
+            raise
     
     def get_all_users(self) -> list:
-        """Get all users (for admin purposes only - never expose hashed passwords)."""
-        return self._load_users()
+        """
+        Get all users from Supabase (admin purposes only).
+        
+        WARNING: This should only be used in administrative contexts.
+        Never expose hashed passwords or user data to clients.
+        
+        Returns:
+            List of all user records
+        """
+        try:
+            response = self.supabase.table(self.table_name).select("*").execute()
+            return response.data if response.data else []
+        except Exception as e:
+            print(f"Error fetching all users: {e}")
+            raise
     
     def delete_user(self, username: str) -> bool:
-        """Delete a user by username."""
-        users = self._load_users()
-        original_count = len(users)
-        users = [u for u in users if u.get("username") != username]
+        """
+        Delete a user by username.
         
-        if len(users) < original_count:
-            self._save_users(users)
+        Args:
+            username: The username to delete
+            
+        Returns:
+            True if user was deleted, False if not found
+        """
+        try:
+            # Check if user exists first
+            user = self.get_user_by_username(username)
+            if not user:
+                return False
+            
+            # Delete the user
+            response = self.supabase.table(self.table_name).delete().eq(
+                "username", username
+            ).execute()
+            
             return True
-        return False
+        except Exception as e:
+            print(f"Error deleting user: {e}")
+            raise
+
+
+# Lazy loader for UserStore to ensure env variables are loaded first
+class _LazyUserStore:
+    """Lazy initialization wrapper for UserStore."""
+    _instance = None
     
-    def user_count(self) -> int:
-        """Get total number of registered users."""
-        return len(self._load_users())
+    def __getattr__(self, name):
+        if self._instance is None:
+            self._instance = UserStore()
+        return getattr(self._instance, name)
 
 
-# Global user store instance
-user_store = UserStore()
+# Global user store instance - lazy initialized
+user_store = _LazyUserStore()
+

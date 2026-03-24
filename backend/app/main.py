@@ -2,6 +2,10 @@
 Main FastAPI application for Password Strength Checker API.
 """
 
+# Load environment variables first, before any other imports
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
