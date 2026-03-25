@@ -37,7 +37,7 @@ app.add_middleware(
 # Include routers
 app.include_router(password_routes.router)
 app.include_router(auth.router)
-
+app.include_router(history.router)
 
 # Root endpoint
 @app.get("/")
