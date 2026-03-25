@@ -3,7 +3,7 @@ User model for secure authentication using Supabase.
 Stores encrypted user credentials with bcrypt hashing.
 """
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, EmailStr
 from datetime import datetime
 from typing import Optional
 
@@ -13,7 +13,7 @@ class UserCreate(BaseModel):
     """Schema for user registration."""
     username: str = Field(..., min_length=3, max_length=50, description="Username (3-50 characters)")
     password: str = Field(..., min_length=8, description="Password (minimum 8 characters)")
-    email: Optional[str] = Field(None, description="Optional email address")
+    email: EmailStr = Field(..., description="Valid email address (required)")
     
     @validator('username')
     def username_alphanumeric(cls, v):
@@ -145,6 +145,39 @@ class UserStore:
             raise
         except Exception as e:
             print(f"Error creating user: {e}")
+            raise
+    
+    def update_user_verification(self, username: str, is_verified: bool = True) -> bool:
+        """
+        Update user's email verification status.
+        
+        Args:
+            username: The username to update
+            is_verified: Whether the email is verified (default True)
+            
+        Returns:
+            True if user was updated successfully
+            
+        Raises:
+            Exception: If database operation fails
+        """
+        try:
+            # Check if user exists
+            user = self.get_user_by_username(username)
+            if not user:
+                raise ValueError(f"User '{username}' not found")
+            
+            # Update is_verified flag
+            response = self.supabase.table(self.table_name).update({
+                "is_verified": is_verified,
+                "updated_at": datetime.now().isoformat()
+            }).eq("username", username).execute()
+            
+            return bool(response.data)
+        except ValueError:
+            raise
+        except Exception as e:
+            print(f"Error updating user verification: {e}")
             raise
     
     def get_all_users(self) -> list:

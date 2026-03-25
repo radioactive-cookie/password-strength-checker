@@ -33,7 +33,7 @@ function getPasswordStrength(pwd: string): PasswordStrength {
 
 export function RegisterPage() {
   const navigate = useNavigate();
-  const { register, isLoading, error, clearError, isLoggedIn } = useAuth();
+  const { register, isLoading, error, clearError, isLoggedIn, requiresVerification } = useAuth();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -58,6 +58,14 @@ export function RegisterPage() {
       navigate('/dashboard');
     }
   }, [isLoggedIn, navigate]);
+
+  useEffect(() => {
+    if (requiresVerification) {
+      // Store username temporarily for verification page
+      localStorage.setItem('securepass_temp_username', username);
+      navigate('/verify-email');
+    }
+  }, [requiresVerification, navigate, username]);
 
   useEffect(() => {
     if (error) {
@@ -92,7 +100,11 @@ export function RegisterPage() {
 
     const success = await register(username.trim(), password, email.trim() || undefined);
     if (success) {
-      navigate('/dashboard');
+      // If verification is required, the useEffect above will redirect to /verify-email
+      // Otherwise, auto-redirect to dashboard
+      if (!requiresVerification) {
+        navigate('/dashboard');
+      }
     } else if (!error) {
       setLocalError('Registration failed. Please try again.');
     }

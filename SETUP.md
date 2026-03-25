@@ -101,23 +101,20 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 
 ## Database Setup
 
-### Create Password Logs Table
+### Run Initial Schema
 
-Run this SQL in your Supabase SQL Editor:
+Execute `backend/schema.sql` in your Supabase SQL Editor to create all tables.
+
+### Add Masked Password Column (Required for History)
+
+If `masked_password` column doesn't exist in `password_logs`, add it:
 
 ```sql
-CREATE TABLE IF NOT EXISTS password_logs (
-    id BIGSERIAL PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    strength TEXT NOT NULL,
-    entropy FLOAT NOT NULL,
-    crack_time TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX IF NOT EXISTS idx_password_logs_user_id ON password_logs(user_id);
-CREATE INDEX IF NOT EXISTS idx_password_logs_created_at ON password_logs(created_at DESC);
+ALTER TABLE password_logs
+ADD COLUMN IF NOT EXISTS masked_password TEXT;
 ```
+
+This stores masked versions of passwords (e.g., "My*****23") in history for display.
 
 ---
 
@@ -144,6 +141,111 @@ Frontend runs on: `http://localhost:5173`
 ### Access the Application
 
 Open your browser and go to: **`http://localhost:5173`**
+
+---
+
+## Email Verification Setup
+
+### Option 1: Test Mode (Development) - RECOMMENDED FOR QUICK TESTING
+
+No email configuration needed! OTP codes print to the backend console.
+
+**Steps:**
+
+1. Ensure `.env` has:
+```bash
+ENABLE_EMAIL=False  # (default, can omit this)
+OTP_EXPIRY_MINUTES=5
+```
+
+2. Start backend:
+```bash
+cd backend
+python -m uvicorn app.main:app --reload
+```
+
+3. Register with any email (e.g., `test@example.com`)
+
+4. **Watch terminal** - you'll see:
+```
+[EMAIL TEST MODE] OTP for john_doe (john@example.com): 123456
+```
+
+5. Copy the OTP and enter on verification page ✅
+
+---
+
+### Option 2: Gmail SMTP (Production)
+
+Send real emails via Gmail.
+
+**Prerequisites:**
+- Gmail account with 2FA enabled
+- App Password generated
+
+**Setup:**
+
+1. **Enable 2FA** (https://myaccount.google.com/security)
+   - Scroll to "2-Step Verification"
+   - Enable and follow setup
+
+2. **Generate App Password** (https://myaccount.google.com/apppasswords)
+   - Select "Mail" and device type
+   - Google generates 16-character password
+   - Copy it
+
+3. **Update `.env`:**
+```bash
+ENABLE_EMAIL=True
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SENDER_EMAIL=your-email@gmail.com
+SENDER_PASSWORD=your-16-char-app-password
+OTP_EXPIRY_MINUTES=5
+```
+
+⚠️ **Important:**
+- Use **App Password**, NOT Gmail password
+- Never commit `.env` to version control
+- Keep `SENDER_PASSWORD` secret
+
+4. **Test:**
+   - Register with your real email
+   - Receive OTP email
+   - Enter code to verify ✅
+
+---
+
+### Option 3: Other SMTP Providers
+
+**Office 365:**
+```bash
+ENABLE_EMAIL=True
+SMTP_SERVER=smtp.office365.com
+SMTP_PORT=587
+SENDER_EMAIL=your-email@your-domain.com
+SENDER_PASSWORD=your-password
+```
+
+**SendGrid:**
+```bash
+ENABLE_EMAIL=True
+SMTP_SERVER=smtp.sendgrid.net
+SMTP_PORT=587
+SENDER_EMAIL=apikey
+SENDER_PASSWORD=SG.your-sendgrid-api-key
+```
+
+---
+
+## Troubleshooting Email
+
+| Issue | Solution |
+|-------|----------|
+| "Invalid API key - 401" | Check SMTP credentials; for Gmail use App Password |
+| "Failed to send email" | Check SMTP_SERVER & SMTP_PORT; check firewall allows port 587 |
+| "OTP Invalid" | OTPs expire after 5 mins; try requesting new OTP |
+| Emails don't work | Set `ENABLE_EMAIL=True` and verify `SENDER_EMAIL` and `SENDER_PASSWORD` |
 
 ---
 

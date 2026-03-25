@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException
 from app.schemas.password_schema import PasswordRequest, PasswordResponse
 from app.services.password_checker import PasswordChecker
 from app.db.supabase_client import supabase
+from app.utils.security import mask_password
 
 # Create router for password-related endpoints
 router = APIRouter(
@@ -14,43 +15,109 @@ router = APIRouter(
 )
 
 
-def store_password_analysis(username: str, strength: str, entropy: float, crack_time: str) -> None:
+def store_password_analysis(username: str, password: str, strength: str, entropy: float, crack_time: str) -> bool:
     """
-    Store password analysis in user's history.
+    Store password analysis in user's history with masked password.
+    
+    First tries Supabase (if configured), then falls back to JSON file storage.
     
     Args:
         username (str): Username of logged-in user
+        password (str): The plaintext password (to be masked for display)
         strength (str): Password strength classification
         entropy (float): Shannon entropy value
         crack_time (str): Estimated time to crack password
+        
+    Returns:
+        bool: True if successfully stored, False if storage failed
         
     Note:
         If storage fails, logs the error but doesn't raise.
         Password checking continues to work even if history storage fails.
         This is intentional - password analysis is more important than history.
+        Pure plaintext password is NOT stored - only masked version is saved.
     """
+    import json
+    import os
+    from datetime import datetime
+    
+    # Validate inputs before storing
+    if not username or not isinstance(username, str):
+        print(f"❌ ERROR: Invalid username for password history storage")
+        return False
+    if not strength or not isinstance(strength, str):
+        print(f"❌ ERROR: Invalid strength value for password history")
+        return False
+    if not isinstance(entropy, (int, float)):
+        print(f"❌ ERROR: Invalid entropy value for password history")
+        return False
+    if not crack_time or not isinstance(crack_time, str):
+        print(f"❌ ERROR: Invalid crack_time value for password history")
+        return False
+    
+    # Try Supabase first
     try:
-        supabase.table("password_logs").insert({
+        masked = mask_password(password)
+        response = supabase.table("password_logs").insert({
             "user_id": username,
+            "masked_password": masked,
             "strength": strength,
             "entropy": entropy,
             "crack_time": crack_time
         }).execute()
+        
+        # Check if insert was successful
+        if response.data and len(response.data) > 0:
+            print(f"✓ Password history stored in Supabase for {username}")
+            print(f"  📌 Masked password: {masked} | Strength: {strength} | Entropy: {entropy} bits")
+            return True
     except Exception as e:
         error_str = str(e)
-        # Provide helpful error messages
-        if "Invalid API key" in error_str or "401" in error_str or "Unauthorized" in error_str:
-            print(
-                f"❌ ERROR: Invalid or missing Supabase API key. "
-                f"Backend requires service_role secret key (sb_secret_), not anon public key. "
-                f"Password history not stored for {username}. "
-                f"Fix: Update SUPABASE_KEY in .env with service_role key from Supabase console."
-            )
-        elif "password_logs" in error_str or "PGRST" in error_str:
-            print(f"❌ ERROR: password_logs table not found in Supabase. Run schema.sql setup.")
-        else:
-            print(f"⚠️  Warning: Failed to store password analysis for {username}: {e}")
+        # Log Supabase errors but continue to JSON fallback
+        if "password_logs" not in error_str.lower():
+            print(f"⚠️  Supabase storage failed, using JSON fallback: {e}")
+    
+    # Fallback: Store in JSON file
+    try:
+        json_file = "data/password_history.json"
+        
+        # Create data directory if it doesn't exist
+        os.makedirs(os.path.dirname(json_file), exist_ok=True)
+        
+        # Read existing history
+        history = {}
+        if os.path.exists(json_file):
+            try:
+                with open(json_file, 'r') as f:
+                    history = json.load(f)
+            except:
+                history = {}
+        
+        # Ensure user entry exists
+        if username not in history:
+            history[username] = []
+        
+        # Add new password analysis
+        history[username].append({
+            "id": len(history[username]) + 1,
+            "masked_password": mask_password(password),
+            "strength": strength,
+            "entropy": entropy,
+            "crack_time": crack_time,
+            "created_at": datetime.now().isoformat()
+        })
+        
+        # Write back to file
+        with open(json_file, 'w') as f:
+            json.dump(history, f, indent=2)
+        
+        print(f"✓ Password history stored in JSON file for {username}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ ERROR: Failed to store password history for {username}: {e}")
         # Don't re-raise - password checking should work even if history storage fails
+        return False
 
 
 @router.post("/check-password", response_model=PasswordResponse)
@@ -105,15 +172,18 @@ async def check_password(request: PasswordRequest) -> PasswordResponse:
         # Store in user history if username provided
         if request.username:
             try:
-                store_password_analysis(
+                success = store_password_analysis(
                     username=request.username,
+                    password=request.password,
                     strength=result.get("strength", ""),
                     entropy=result.get("entropy", 0.0),
                     crack_time=result.get("estimated_crack_time", "")
                 )
+                if not success:
+                    print(f"⚠️  Warning: Failed to store password history for {request.username}")
             except Exception as e:
                 # Log error but don't fail the password check
-                print(f"Failed to store password history for {request.username}: {e}")
+                print(f"❌ Unexpected error storing password history for {request.username}: {e}")
         
         # Return response (without password hash, only analysis)
         return PasswordResponse(**result)

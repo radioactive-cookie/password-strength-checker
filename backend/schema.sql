@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT UNIQUE NOT NULL,
     hashed_password TEXT NOT NULL,
     email TEXT,
+    is_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -21,6 +22,7 @@ CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE TABLE IF NOT EXISTS password_logs (
     id BIGSERIAL PRIMARY KEY,
     user_id TEXT NOT NULL,
+    masked_password TEXT,
     strength TEXT NOT NULL,
     entropy FLOAT NOT NULL,
     crack_time TEXT NOT NULL,
@@ -32,6 +34,18 @@ CREATE INDEX IF NOT EXISTS idx_password_logs_user_id ON password_logs(user_id);
 
 -- Create index on created_at for sorting by date
 CREATE INDEX IF NOT EXISTS idx_password_logs_created_at ON password_logs(created_at DESC);
+
+-- Create OTP storage table for email verification
+CREATE TABLE IF NOT EXISTS email_otps (
+    id BIGSERIAL PRIMARY KEY,
+    username TEXT NOT NULL,
+    otp_code TEXT NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create index on username for OTP lookups
+CREATE INDEX IF NOT EXISTS idx_email_otps_username ON email_otps(username);
 
 -- ============================================================
 -- Optional: Enable Row Level Security (RLS)

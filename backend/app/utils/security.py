@@ -89,3 +89,39 @@ def get_password_hash_info(hashed_password: str) -> dict:
         return {"error": "Unknown hash format"}
     except Exception as e:
         return {"error": str(e)}
+
+
+def mask_password(password: str) -> str:
+    """
+    Create a safe masked display of a password for history.
+    
+    Shows only first 2 and last 2 characters, with middle masked as asterisks.
+    For very short passwords, all characters are masked.
+    
+    Examples:
+        - "Password123" → "Pa*******23"
+        - "abc" → "***"
+        - "ab" → "**"
+        - "Secure@Pass456!" → "Se*********6!"
+    
+    Args:
+        password (str): The plaintext password to mask.
+        
+    Returns:
+        str: The masked password safe for display.
+        
+    Note:
+        - This is for display purposes only in password history
+        - The full password is never stored in database
+        - Original password is only kept in bcrypt hash
+    """
+    if not password:
+        return ""
+    
+    # For very short passwords (4 chars or less), mask all
+    if len(password) <= 4:
+        return "*" * len(password)
+    
+    # For longer passwords, show first 2 and last 2 with asterisks in middle
+    # Example: "MyPassword" (10 chars) → "My*****rd"
+    return password[:2] + "*" * (len(password) - 4) + password[-2:]

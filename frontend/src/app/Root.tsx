@@ -7,6 +7,7 @@ import { Navbar } from './components/Navbar';
 import App from './App';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import { Dashboard } from './pages/Dashboard';
 
 export function Root() {
@@ -18,6 +19,7 @@ export function Root() {
           <Route path="/" element={<App />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route
             path="/dashboard"
             element={

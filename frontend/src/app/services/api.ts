@@ -3,6 +3,7 @@
  * Configure your FastAPI backend URL via the VITE_API_URL environment variable.
  */
 
+<<<<<<< HEAD
 const RAW_API_BASE =
   import.meta.env.VITE_API_URL ||
   "https://password-strength-checker-5-vbg8.onrender.com";
@@ -11,6 +12,16 @@ const RAW_API_BASE =
 const API_BASE_URL = RAW_API_BASE.replace(/\/+$/, "");
 
 console.log("[API] Base URL:", API_BASE_URL);
+=======
+// Available backend URLs - will try primary first, then fallback
+const BACKEND_URLS = [
+  ((import.meta as any).env?.VITE_API_URL) || "https://password-strength-checker-5-vbg8.onrender.com", // Primary (new Render server)
+  "https://password-strength-checker-pivg.onrender.com", // Fallback (previous server)
+  "http://localhost:8000", // Local development
+];
+
+let API_BASE_URL = BACKEND_URLS[0]; // Start with primary URL
+>>>>>>> 9d357c2e (fixed the feature in password test history)
 
 export type StrengthLevel =
   | "very_weak"
@@ -30,21 +41,52 @@ export interface PasswordCheckResult {
 }
 
 async function post<T>(path: string, body: object): Promise<T> {
-  try {
-    const fullUrl = `${API_BASE_URL}${path}`;
-    console.log(`[API] POST request to: ${fullUrl}`);
+  // Try each backend URL in order until one succeeds
+  for (let i = 0; i < BACKEND_URLS.length; i++) {
+    API_BASE_URL = BACKEND_URLS[i];
+    try {
+      const fullUrl = `${API_BASE_URL}${path}`;
+      console.log(`[API] POST request to: ${fullUrl}`);
 
-    const res = await fetch(fullUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+      const res = await fetch(fullUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
-    if (!res.ok) {
-      const text = await res.text();
-      console.error(`[API] Response error (${res.status}):`, text);
-      throw new Error(`Request to ${path} failed (${res.status}): ${text}`);
+      if (!res.ok) {
+        const text = await res.text();
+        console.error(`[API] Response error (${res.status}):`, text);
+        // If not ok, try next URL
+        if (i < BACKEND_URLS.length - 1) {
+          console.warn(`[API] Trying next backend URL...`);
+          continue;
+        }
+        throw new Error(`Request to ${path} failed (${res.status}): ${text}`);
+      }
+
+      const data = (await res.json()) as T;
+      console.log(`[API] Response success from:`, API_BASE_URL);
+      return data;
+    } catch (error) {
+      if (i < BACKEND_URLS.length - 1) {
+        console.warn(
+          `[API] Failed to connect to ${API_BASE_URL}, trying next backend...`
+        );
+        continue;
+      }
+      if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
+        console.error(
+          "[API] Network error - All backend URLs failed",
+          BACKEND_URLS
+        );
+        throw new Error(
+          `Unable to connect to any password analysis server. Please ensure at least one backend is running.`
+        );
+      }
+      throw error;
     }
+<<<<<<< HEAD
 
     const data = (await res.json()) as T;
     console.log(`[API] Response success:`, data);
@@ -60,10 +102,14 @@ async function post<T>(path: string, body: object): Promise<T> {
       );
     }
     throw error;
+=======
+>>>>>>> 9d357c2e (fixed the feature in password test history)
   }
+  throw new Error("All backend URLs failed");
 }
 
 async function get<T>(path: string): Promise<T> {
+<<<<<<< HEAD
   const fullUrl = `${API_BASE_URL}${path}`;
   console.log(`[API] GET request to: ${fullUrl}`);
 
@@ -76,6 +122,36 @@ async function get<T>(path: string): Promise<T> {
   }
 
   return res.json() as Promise<T>;
+=======
+  // Try each backend URL in order until one succeeds
+  for (let i = 0; i < BACKEND_URLS.length; i++) {
+    API_BASE_URL = BACKEND_URLS[i];
+    try {
+      const fullUrl = `${API_BASE_URL}${path}`;
+      const res = await fetch(fullUrl);
+      if (!res.ok) {
+        const text = await res.text();
+        // If not ok, try next URL
+        if (i < BACKEND_URLS.length - 1) {
+          console.warn(`[API] GET request failed, trying next backend URL...`);
+          continue;
+        }
+        throw new Error(`Request to ${path} failed (${res.status}): ${text}`);
+      }
+      console.log(`[API] GET request success from:`, API_BASE_URL);
+      return res.json() as Promise<T>;
+    } catch (error) {
+      if (i < BACKEND_URLS.length - 1) {
+        console.warn(
+          `[API] Failed to connect to ${API_BASE_URL}, trying next backend...`
+        );
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error("All backend URLs failed");
+>>>>>>> 9d357c2e (fixed the feature in password test history)
 }
 
 export const api = {};
@@ -99,8 +175,8 @@ export const checkPassword = (
  */
 export interface PasswordHistoryItem {
   id: string;
-  username: string;
-  strength: number;
+  masked_password: string;
+  strength: string;
   entropy: number;
   crack_time: string;
   created_at: string;
@@ -109,11 +185,17 @@ export interface PasswordHistoryItem {
 export const getPasswordHistory = async (
   username: string
 ): Promise<PasswordHistoryItem[]> => {
+<<<<<<< HEAD
   const response = await get<{
     username: string;
     history: PasswordHistoryItem[];
   }>(`/api/history?username=${encodeURIComponent(username)}`);
 
+=======
+  const response = await get<{ username: string; history: PasswordHistoryItem[] }>(
+    `/api/user-history?username=${encodeURIComponent(username)}`
+  );
+>>>>>>> 9d357c2e (fixed the feature in password test history)
   return response.history || [];
 };
 
@@ -155,10 +237,15 @@ export function clientSideStrength(password: string): {
 // ───────────────────────────────────────────────
 
 export interface RegisterResponse {
-  id: number;
-  username: string;
-  email?: string;
-  created_at?: string;
+  success: boolean;
+  message: string;
+  user: {
+    id: number;
+    username: string;
+    email?: string;
+  };
+  requires_verification: boolean;
+  verification_sent_to?: string;
 }
 
 export interface LoginResponse {
@@ -168,9 +255,26 @@ export interface LoginResponse {
     id: number;
     username: string;
     email?: string;
+    is_verified?: boolean;
   };
 }
 
+<<<<<<< HEAD
+=======
+export interface VerifyEmailResponse {
+  success: boolean;
+  message: string;
+  verified: boolean;
+}
+
+/**
+ * Register a new user with the backend
+ * @param username - Username (3-50 characters, alphanumeric + hyphens/underscores)
+ * @param password - Password (minimum 8 characters)
+ * @param email - Optional email address
+ * @returns Promise with user data
+ */
+>>>>>>> 9d357c2e (fixed the feature in password test history)
 export const registerUser = (
   username: string,
   password: string,
@@ -190,5 +294,21 @@ export const loginUser = (
   return post<LoginResponse>("/auth/login", {
     username,
     password,
+  });
+};
+
+/**
+ * Verify user's email with OTP code
+ * @param username - Username
+ * @param otp - 6-digit OTP code
+ * @returns Promise with verification response
+ */
+export const verifyEmail = (
+  username: string,
+  otp: string
+): Promise<VerifyEmailResponse> => {
+  return post<VerifyEmailResponse>("/auth/verify-email", {
+    username,
+    otp,
   });
 };

@@ -178,6 +178,7 @@ export function Dashboard() {
           setLoadingHistory(true);
           setHistoryError(null);
           const historyData = await getPasswordHistory(user.username);
+          console.log('📊 Password history data:', historyData);
           setHistory(historyData);
         } catch (err) {
           setHistoryError(
@@ -203,6 +204,17 @@ export function Dashboard() {
       const checkResult = await checkPassword(password, user?.username);
       setResult(checkResult);
       setHasChecked(true);
+      
+      // Refresh history after successful check
+      try {
+        if (user?.username) {
+          const historyData = await getPasswordHistory(user.username);
+          setHistory(historyData);
+        }
+      } catch (historyErr) {
+        // History fetch error - don't block password check
+        console.warn("Failed to refresh history:", historyErr);
+      }
     } catch (err) {
       setError(
         err instanceof Error
@@ -686,6 +698,7 @@ export function Dashboard() {
                       <thead>
                         <tr className="border-b border-[#00c8ff]/20">
                           <th className="text-left py-3 px-4 text-gray-500 font-semibold text-xs">DATE</th>
+                          <th className="text-left py-3 px-4 text-gray-500 font-semibold text-xs">PASSWORD</th>
                           <th className="text-left py-3 px-4 text-gray-500 font-semibold text-xs">STRENGTH</th>
                           <th className="text-left py-3 px-4 text-gray-500 font-semibold text-xs">ENTROPY</th>
                           <th className="text-left py-3 px-4 text-gray-500 font-semibold text-xs">CRACK TIME</th>
@@ -705,6 +718,11 @@ export function Dashboard() {
                                 hour: "2-digit",
                                 minute: "2-digit",
                               })}
+                            </td>
+                            <td className="py-4 px-4 text-gray-300 text-sm font-mono">
+                              <span style={{ color: "#00c8ff" }}>
+                                {item.masked_password || "****"}
+                              </span>
                             </td>
                             <td className="py-4 px-4">
                               <span
@@ -916,6 +934,112 @@ export function Dashboard() {
             </motion.div>
           </div>
         </div>
+
+        {/* Password History Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mb-12"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <History className="w-6 h-6 text-[#00c8ff]" />
+            <h2 className="text-2xl font-bold text-white">Your Password History</h2>
+          </div>
+
+          {history.length > 0 ? (
+            <div
+              className="relative bg-[#1a1a1a] border border-[#00c8ff]/25 rounded-xl overflow-hidden"
+              style={{
+                boxShadow: '0 0 0 1px rgba(0,200,255,0.1), 0 0 30px rgba(0,200,255,0.05)',
+              }}
+            >
+              <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{
+                backgroundImage: 'linear-gradient(#00c8ff 1px, transparent 1px)',
+                backgroundSize: '00px 40px',
+              }} />
+              
+              <div className="relative overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-[#00c8ff]/20">
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-[#00c8ff] uppercase tracking-wider" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                        Password
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-[#00c8ff] uppercase tracking-wider" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                        Strength
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-[#00c8ff] uppercase tracking-wider" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                        Entropy
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-[#00c8ff] uppercase tracking-wider" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                        Crack Time
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-[#00c8ff] uppercase tracking-wider" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                        Date
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.map((item, idx) => (
+                      <motion.tr
+                        key={idx}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className="border-b border-[#00c8ff]/10 hover:bg-[#00c8ff]/5 transition-colors"
+                      >
+                        <td className="px-6 py-4">
+                          <code style={{ fontFamily: "'JetBrains Mono', monospace", color: "#00c8ff", fontSize: "0.9rem" }}>
+                            {item.masked_password}
+                          </code>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            style={{
+                              color: getStrengthColor(item.strength),
+                              fontWeight: 600,
+                              fontFamily: "'JetBrains Mono', monospace",
+                              fontSize: "0.85rem",
+                            }}
+                          >
+                            {getStrengthLabel(item.strength)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span style={{ color: "#999", fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}>
+                            {item.entropy.toFixed(2)} bits
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span style={{ color: "#999", fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem" }}>
+                            {item.crack_time}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span style={{ color: "#666", fontFamily: "'JetBrains Mono', monospace", fontSize: "0.8rem" }}>
+                            {new Date(item.created_at).toLocaleDateString()} {new Date(item.created_at).toLocaleTimeString()}
+                          </span>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div
+              className="relative bg-[#1a1a1a] border border-[#00c8ff]/25 rounded-xl p-8 text-center"
+              style={{
+                boxShadow: '0 0 0 1px rgba(0,200,255,0.1), 0 0 30px rgba(0,200,255,0.05)',
+              }}
+            >
+              <Database className="w-12 h-12 text-[#00c8ff]/30 mx-auto mb-4" />
+              <p className="text-[#666] font-medium">No password checks yet</p>
+              <p className="text-[#555] text-sm mt-1">Check your first password above to see it appear here</p>
+            </div>
+          )}
+        </motion.div>
       </div>
     </div>
   );
