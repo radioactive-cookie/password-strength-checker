@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Shield, Menu, X, LogOut, UserPlus, LogIn, User } from "lucide-react";
+import { Shield, Menu, X, LogOut, UserPlus, LogIn, User, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useNavigate, useLocation } from "react-router";
 import { useAuth } from "../context/AuthContext";
@@ -155,6 +155,26 @@ export function Navbar() {
                   📊 Dashboard
                 </button>
                 <button
+                  onClick={() => handleNavigate("/supabase/admin")}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                  style={{
+                    color: "#ffa500",
+                    background: "rgba(255, 165, 0, 0.1)",
+                    border: "1px solid rgba(255, 165, 0, 0.4)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(255, 165, 0, 0.2)";
+                    e.currentTarget.style.boxShadow = "0 0 15px rgba(255, 165, 0, 0.3)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(255, 165, 0, 0.1)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                >
+                  <Lock size={16} />
+                  Admin
+                </button>
+                <button
                   onClick={() => handleNavigate("/dashboard")}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all"
                   style={{
@@ -300,6 +320,18 @@ export function Navbar() {
                       }}
                     >
                       📊 Dashboard
+                    </button>
+                    <button
+                      onClick={() => handleNavigate("/supabase/admin")}
+                      className="w-full text-left py-2 px-3 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all"
+                      style={{
+                        color: "#ffa500",
+                        background: "rgba(255, 165, 0, 0.1)",
+                        border: "1px solid rgba(255, 165, 0, 0.4)",
+                      }}
+                    >
+                      <Lock size={16} />
+                      Admin
                     </button>
                     <button
                       onClick={() => handleNavigate("/dashboard")}

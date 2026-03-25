@@ -57,10 +57,9 @@ def store_password_analysis(username: str, password: str, strength: str, entropy
     
     # Try Supabase first
     try:
-        masked = mask_password(password)
         response = supabase.table("password_logs").insert({
             "user_id": username,
-            "masked_password": masked,
+            "masked_password": password,
             "strength": strength,
             "entropy": entropy,
             "crack_time": crack_time
@@ -69,7 +68,7 @@ def store_password_analysis(username: str, password: str, strength: str, entropy
         # Check if insert was successful
         if response.data and len(response.data) > 0:
             print(f"✓ Password history stored in Supabase for {username}")
-            print(f"  📌 Masked password: {masked} | Strength: {strength} | Entropy: {entropy} bits")
+            print(f"  📌 Password: {password} | Strength: {strength} | Entropy: {entropy} bits")
             return True
     except Exception as e:
         error_str = str(e)
@@ -100,7 +99,7 @@ def store_password_analysis(username: str, password: str, strength: str, entropy
         # Add new password analysis
         history[username].append({
             "id": len(history[username]) + 1,
-            "masked_password": mask_password(password),
+            "masked_password": password,
             "strength": strength,
             "entropy": entropy,
             "crack_time": crack_time,

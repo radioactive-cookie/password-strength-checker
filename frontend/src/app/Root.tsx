@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -9,8 +10,14 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import { Dashboard } from './pages/Dashboard';
+import { AdminPage } from './pages/AdminPage';
 
 export function Root() {
+  useEffect(() => {
+    // Apply dark mode to html element
+    document.documentElement.classList.add('dark');
+  }, []);
+
   return (
     <Router>
       <AuthProvider>
@@ -25,6 +32,14 @@ export function Root() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/supabase/admin"
+            element={
+              <ProtectedRoute>
+                <AdminPage />
               </ProtectedRoute>
             }
           />

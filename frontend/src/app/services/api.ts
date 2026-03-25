@@ -10,8 +10,23 @@ const BACKEND_URLS = [
   "http://localhost:8000", // Local development
 ];
 
-let API_BASE_URL = BACKEND_URLS[0]; // Start with primary URL
+export let API_BASE_URL = BACKEND_URLS[0]; // Start with primary URL
 console.log("[API] Base URL:", API_BASE_URL);
+
+/**
+ * Get headers for admin API requests
+ * Includes Content-Type and X-Admin-Key header for authentication
+ * 
+ * @param adminKey - Optional admin key. If not provided, looks for VITE_ADMIN_KEY in env
+ * @returns Headers object for fetch requests
+ */
+export function getAdminHeaders(adminKey?: string): HeadersInit {
+  const key = adminKey || ((import.meta as any).env?.VITE_ADMIN_KEY) || "";
+  return {
+    "Content-Type": "application/json",
+    "X-Admin-Key": key,
+  };
+}
 
 export type StrengthLevel =
   | "very_weak"

@@ -9,7 +9,7 @@ load_dotenv()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.routes import password_routes, auth
+from app.routes import password_routes, auth, admin
 from app.routes import history
 
 
@@ -38,6 +38,7 @@ app.add_middleware(
 app.include_router(password_routes.router)
 app.include_router(auth.router)
 app.include_router(history.router)
+app.include_router(admin.router)
 
 # Root endpoint
 @app.get("/")
@@ -72,6 +73,7 @@ async def startup_event():
     print(f"   - POST /auth/login (user authentication)")
     print(f"   - POST /api/check-password (password strength analysis)")
     print(f"   - GET /api/health (health check)")
+    print(f"   - GET /api/admin/* (admin panel endpoints - require X-Admin-Key header)")
     print("="*70 + "\n")
 
 
