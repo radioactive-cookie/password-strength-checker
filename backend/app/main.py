@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.routes import password_routes, auth
+from app.routes import history
 
 
 # Create FastAPI application instance
