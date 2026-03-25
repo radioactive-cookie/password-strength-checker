@@ -98,7 +98,6 @@ export function AdminPage() {
       const isValid = await verifyAdminAccess(adminKey);
       if (isValid) {
         setIsAuthenticated(true);
-        localStorage.setItem('admin_key', adminKey);
         // Load initial data
         await loadStatistics(adminKey);
       } else {
@@ -160,14 +159,19 @@ export function AdminPage() {
   }, [adminKey]);
 
   /**
-   * Restore admin key from localStorage on mount
+   * Clear admin session on page unload/close
+   * Ensures user is logged out when browser closes or page refreshes
    */
   useEffect(() => {
-    const saved = localStorage.getItem('admin_key');
-    if (saved) {
-      setAdminKey(saved);
-      setIsAuthenticated(true);
-    }
+    const handleBeforeUnload = () => {
+      setIsAuthenticated(false);
+      setAdminKey('');
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, []);
 
   /**
