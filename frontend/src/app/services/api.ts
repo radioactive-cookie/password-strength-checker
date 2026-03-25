@@ -1,15 +1,16 @@
 /**
  * SecurePass API Service
  * Configure your FastAPI backend URL via the VITE_API_URL environment variable.
- * Default: http://localhost:8000
- *
- * Expected endpoints:
- *   POST /api/check-password — { password: string } → PasswordCheckResult
  */
 
-const API_BASE_URL =
+const RAW_API_BASE =
   import.meta.env.VITE_API_URL ||
   "https://password-strength-checker-5-vbg8.onrender.com";
+
+// Remove trailing slash if present (prevents //api issues)
+const API_BASE_URL = RAW_API_BASE.replace(/\/+$/, "");
+
+console.log("[API] Base URL:", API_BASE_URL);
 
 export type StrengthLevel =
   | "very_weak"
@@ -51,11 +52,11 @@ async function post<T>(path: string, body: object): Promise<T> {
   } catch (error) {
     if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
       console.error(
-        "[API] Network error - Backend may not be running at",
+        "[API] Network error - Backend may not be reachable at",
         API_BASE_URL
       );
       throw new Error(
-        `Unable to connect to the password analysis server at ${API_BASE_URL}. Please ensure the backend is running.`
+        `Unable to connect to backend at ${API_BASE_URL}. Check if Render service is live.`
       );
     }
     throw error;
@@ -63,29 +64,24 @@ async function post<T>(path: string, body: object): Promise<T> {
 }
 
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE_URL}${path}`);
+  const fullUrl = `${API_BASE_URL}${path}`;
+  console.log(`[API] GET request to: ${fullUrl}`);
+
+  const res = await fetch(fullUrl);
+
   if (!res.ok) {
     const text = await res.text();
+    console.error(`[API] GET error (${res.status}):`, text);
     throw new Error(`Request to ${path} failed (${res.status}): ${text}`);
   }
+
   return res.json() as Promise<T>;
 }
 
-export const api = {
-  // reserved for future endpoints
-};
+export const api = {};
 
 /**
- * Check password strength with integrated breach detection
- * Calls the backend /api/check-password endpoint that combines:
- * - Password strength analysis
- * - Shannon entropy calculation
- * - Estimated crack time
- * - Have I Been Pwned breach detection
- *
- * @param password - The password to check
- * @param username - Optional username to store analysis in history for logged-in users
- * @returns Promise with strength analysis and breach status
+ * Check password strength
  */
 export const checkPassword = (
   password: string,
@@ -99,9 +95,7 @@ export const checkPassword = (
 };
 
 /**
- * Fetch password analysis history for a specific user
- * @param username - Username to fetch history for
- * @returns Promise with array of password analysis records
+ * Fetch password history
  */
 export interface PasswordHistoryItem {
   id: string;
@@ -115,15 +109,16 @@ export interface PasswordHistoryItem {
 export const getPasswordHistory = async (
   username: string
 ): Promise<PasswordHistoryItem[]> => {
-  const response = await get<{ username: string; history: PasswordHistoryItem[] }>(
-    `/api/history?username=${encodeURIComponent(username)}`
-  );
+  const response = await get<{
+    username: string;
+    history: PasswordHistoryItem[];
+  }>(`/api/history?username=${encodeURIComponent(username)}`);
+
   return response.history || [];
 };
 
 // ───────────────────────────────────────────────
 // Client-side fallback strength calculation
-// Used for real-time bar updates while the user types
 // ───────────────────────────────────────────────
 export function clientSideStrength(password: string): {
   strength: StrengthLevel;
@@ -133,13 +128,11 @@ export function clientSideStrength(password: string): {
 
   let score = 0;
 
-  // Length scoring
   if (password.length >= 8) score += 15;
   if (password.length >= 12) score += 15;
   if (password.length >= 16) score += 15;
   if (password.length >= 20) score += 5;
 
-  // Character set scoring
   if (/[a-z]/.test(password)) score += 10;
   if (/[A-Z]/.test(password)) score += 10;
   if (/[0-9]/.test(password)) score += 15;
@@ -158,7 +151,7 @@ export function clientSideStrength(password: string): {
 }
 
 // ───────────────────────────────────────────────
-// AUTHENTICATION ENDPOINTS
+// AUTH
 // ───────────────────────────────────────────────
 
 export interface RegisterResponse {
@@ -178,13 +171,6 @@ export interface LoginResponse {
   };
 }
 
-/**
- * Register a new user with the backend
- * @param username - Username (3-50 characters, alphanumeric + hyphens/underscores)
- * @param password - Password (minimum 8 characters)
- * @param email - Optional email address
- * @returns Promise with user data
- */
 export const registerUser = (
   username: string,
   password: string,
@@ -197,12 +183,6 @@ export const registerUser = (
   });
 };
 
-/**
- * Login a user with the backend
- * @param username - Username
- * @param password - Password
- * @returns Promise with login response
- */
 export const loginUser = (
   username: string,
   password: string
