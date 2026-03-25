@@ -1,13 +1,11 @@
 from fastapi import APIRouter, Query
 from app.db.supabase_client import supabase
+import json
+import os
 
 router = APIRouter(prefix="/api", tags=["history"])
 
 
-<<<<<<< HEAD
-@router.get("/history")
-async def get_history(username: str = Query(...)):
-=======
 @router.get("/user-history")
 async def get_user_history(username: str = Query(...)):
     """
@@ -34,33 +32,11 @@ async def get_user_history(username: str = Query(...)):
             ]
         }
     """
-    import json
-    import os
-    
     # Try Supabase first
->>>>>>> 9d357c2e (fixed the feature in password test history)
     try:
         response = (
             supabase
             .table("password_logs")
-<<<<<<< HEAD
-            .select("*")
-            .eq("username", username)
-            .order("created_at", desc=True)
-            .execute()
-        )
-
-        return {
-            "username": username,
-            "history": response.data or []
-        }
-
-    except Exception as e:
-        return {
-            "error": "Failed to fetch history",
-            "details": str(e)
-        }
-=======
             .select("id, masked_password, strength, entropy, crack_time, created_at")
             .eq("user_id", username)
             .order("created_at", desc=True)
@@ -122,4 +98,3 @@ async def get_history(username: str = Query(...)):
     Kept for backward compatibility.
     """
     return await get_user_history(username)
->>>>>>> 9d357c2e (fixed the feature in password test history)
