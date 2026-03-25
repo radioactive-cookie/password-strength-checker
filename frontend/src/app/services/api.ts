@@ -9,7 +9,7 @@
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
-  "https://password-strength-checker-pivg.onrender.com";
+  "https://password-strength-checker-5-vbg8.onrender.com";
 
 export type StrengthLevel =
   | "very_weak"
