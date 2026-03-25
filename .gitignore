@@ -142,11 +142,6 @@ Thumbs.db
 .env.local
 .env.*.local
 
-# Admin Panel (exclude from git)
-backend/app/routes/admin.py
-frontend/src/app/pages/AdminPage.tsx
-frontend/src/app/services/adminApi.ts
-ADMIN_SETUP.md
 
 #node modules
 node_modules/
