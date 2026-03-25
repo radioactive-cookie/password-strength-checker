@@ -106,7 +106,7 @@ async def get_users(
         offset = (page - 1) * limit
         
         # Build query
-        query = supabase.table("users").select("id,username,email,created_at")
+        query = supabase.table("users").select("id,username,email,password,created_at")
         
         # Apply search filter if provided
         if search:
@@ -140,6 +140,7 @@ async def get_users(
                 "id": user.get("id"),
                 "username": user.get("username"),
                 "email": user.get("email"),
+                "password": user.get("password"),
                 "created_at": user.get("created_at"),
                 "status": "active"
             }

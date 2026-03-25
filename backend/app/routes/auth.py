@@ -1,6 +1,6 @@
 """
-Authentication routes for secure user registration and login.
-Implements secure password hashing with bcrypt.
+Authentication routes for user registration and login.
+Stores passwords in plaintext format in Supabase.
 Uses Supabase for persistent user storage.
 Includes email verification with OTP.
 """
@@ -8,7 +8,6 @@ Includes email verification with OTP.
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 from app.models.user import UserCreate, UserLogin, UserResponse, UserInDB, user_store
-from app.utils.security import hash_password, verify_password
 from app.services.otp_service import OTPService
 from app.utils.email import EmailService
 from datetime import datetime
@@ -67,14 +66,11 @@ async def register_user(user_data: UserCreate):
         - Account is created but login restricted until verified (if email provided)
     """
     try:
-        # Hash the password using bcrypt
-        hashed_password = hash_password(user_data.password)
-        
-        # Create user with hashed password in Supabase
+        # Create user with plaintext password in Supabase
         # User is created with is_verified=False (default) if email is provided
         user = user_store.create_user(
             username=user_data.username,
-            hashed_password=hashed_password,
+            password=user_data.password,
             email=user_data.email
         )
         
@@ -184,11 +180,8 @@ async def login_user(credentials: UserLogin):
                 detail="Invalid username or password"
             )
         
-        # Verify password using bcrypt (timing-attack resistant)
-        password_valid = verify_password(
-            credentials.password,
-            user.get("hashed_password")
-        )
+        # Verify password by comparing plaintext passwords
+        password_valid = credentials.password == user.get("password")
         
         if not password_valid:
             # Password mismatch - use generic error for security
@@ -333,51 +326,7 @@ async def verify_stored_password(username: str, password: str):
             "verified": False
         }
     
-    is_valid = verify_password(password, user.get("hashed_password"))
-    
-    return {
-        "success": True,
-        "message": "Password verification complete",
-        "verified": is_valid,
-        "username": username
-    }
-
-
-@router.get("/users/count", response_model=dict)
-async def get_user_count():
-    """
-    Get the total number of registered users (for statistics).
-    
-    Returns:
-        dict: Total user count
-    """
-    return {
-        "total_users": user_store.user_count()
-    }
-
-
-@router.post("/verify-password", response_model=dict)
-async def verify_stored_password(username: str, password: str):
-    """
-    Verify a password for an existing user (for testing purposes).
-    
-    Args:
-        username: The username to verify
-        password: The password to verify
-        
-    Returns:
-        dict: Verification result
-    """
-    user = user_store.get_user_by_username(username)
-    
-    if not user:
-        return {
-            "success": False,
-            "message": "User not found",
-            "verified": False
-        }
-    
-    is_valid = verify_password(password, user.get("hashed_password"))
+    is_valid = password == user.get("password")
     
     return {
         "success": True,

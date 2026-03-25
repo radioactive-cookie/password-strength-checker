@@ -1,6 +1,6 @@
 """
-User model for secure authentication using Supabase.
-Stores encrypted user credentials with bcrypt hashing.
+User model for authentication using Supabase.
+Stores user credentials with plaintext passwords.
 """
 
 from pydantic import BaseModel, Field, validator, EmailStr
@@ -51,7 +51,7 @@ class UserInDB(BaseModel):
     """Schema for user in database (internal use only)."""
     id: Optional[int] = None
     username: str
-    hashed_password: str
+    password: str
     email: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
 
@@ -106,13 +106,13 @@ class UserStore:
             print(f"Error fetching user by username: {e}")
             raise
     
-    def create_user(self, username: str, hashed_password: str, email: Optional[str] = None) -> dict:
+    def create_user(self, username: str, password: str, email: Optional[str] = None) -> dict:
         """
         Create a new user in Supabase.
         
         Args:
             username: Unique username
-            hashed_password: Bcrypt hashed password (never store plaintext)
+            password: Plaintext password (stored as is)
             email: Optional email address
             
         Returns:
@@ -131,7 +131,7 @@ class UserStore:
             # Insert new user into Supabase
             response = self.supabase.table(self.table_name).insert({
                 "username": username,
-                "hashed_password": hashed_password,
+                "password": password,
                 "email": email,
                 "created_at": datetime.now().isoformat()
             }).execute()

@@ -31,8 +31,9 @@ def init_database():
     CREATE TABLE IF NOT EXISTS users (
         id BIGSERIAL PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
-        hashed_password TEXT NOT NULL,
+        password TEXT NOT NULL,
         email TEXT,
+        is_verified BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );

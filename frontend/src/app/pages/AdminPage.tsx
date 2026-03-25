@@ -543,19 +543,20 @@ export function AdminPage() {
                   <TableHead>ID</TableHead>
                   <TableHead>Username</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Password</TableHead>
                   <TableHead>Created At</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8">
+                    <TableCell colSpan={5} className="text-center py-8">
                       <Loader2 className="w-6 h-6 animate-spin mx-auto" />
                     </TableCell>
                   </TableRow>
                 ) : users.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                       No users found
                     </TableCell>
                   </TableRow>
@@ -571,6 +572,7 @@ export function AdminPage() {
                       <TableCell className="font-mono text-sm">{u.id}</TableCell>
                       <TableCell className="font-semibold">{u.username}</TableCell>
                       <TableCell className="text-sm">{u.email || '-'}</TableCell>
+                      <TableCell className="font-mono text-sm break-all">{u.password}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {new Date(u.created_at).toLocaleDateString()}
                       </TableCell>
